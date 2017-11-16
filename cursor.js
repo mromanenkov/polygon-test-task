@@ -1,5 +1,3 @@
-'use strict'
-
 const cursor = {
     cursorDownPos: [0,0],
     cursorUpPos: [0,0],

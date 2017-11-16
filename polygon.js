@@ -1,5 +1,3 @@
-'use strict'
-
 function Polygon(points, strokeColor, fillColor) {
     this.points = points;
     this.strokeColor = strokeColor;

@@ -1,5 +1,3 @@
-'use strict'
-
 function isPointInPoly(point, vs) {
     let x = point[0], y = point[1];
     

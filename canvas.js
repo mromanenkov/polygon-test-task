@@ -1,4 +1,4 @@
-'use strict'
+
 
 function Canvas(id, setting, objects) {
     this.setting = setting;
