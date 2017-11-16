@@ -10,10 +10,13 @@ let poly2 = new Polygon(polygonPointsB, strokeColor, fillColor);
 
 let setting = {
     width: window.innerWidth,
-    height: window.innerHeight
+    height: window.innerHeight,
+    padding: 30,
+    polygonMargin: 20
 }
 let canvas = new Canvas('example', setting);
-window.onload = canvas.init();
+
+window.addEventListener('load', canvas.init());
 
 canvas.add(poly1);
 canvas.add(poly2);

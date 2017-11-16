@@ -6,16 +6,24 @@ function Canvas(id, setting, objects) {
     this.selectedObject = false;
     this.element = document.getElementById(id);
     this.ctx = this.element.getContext('2d');
+    this.nextObjListPos = [this.setting.padding, this.setting.padding];
 }
 
 Canvas.prototype = {
-    init: function() {
+    init: function(objects) {
         this.element.width = this.setting.width;
         this.element.height = this.setting.height;
     },
 
     add: function(object) {
         this.objects.push(object);
+        object.setFrame();
+
+        let offset = [this.nextObjListPos[0] - object.frame[0][0], this.nextObjListPos[1] -  object.frame[0][1]];
+        
+        object.shift(offset);
+        object.setFrame();
+        this.nextObjListPos[1] = object.frame[object.frame.length-1][1] + this.setting.polygonMargin;
     },
 
     draw: function(object, isFill) {

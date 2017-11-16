@@ -40,8 +40,6 @@ function getIntersection(segmentA, segmentB) {
     }else{
         return false;
     }
-
-
 }
 
 function checkOverlap(polyA, polyB){
