@@ -7,10 +7,11 @@ let polygonPointsB = [[0,0], [100,0], [100,100], [0,0]];
 let color = '#fff';
 */
 
-function Polygon(points, color) {
+function Polygon(points, strokeColor, fillColor) {
     this.points = points;
-    this.color = color;
-    //this.selected = false;
+    this.strokeColor = strokeColor;
+    this.fillColor = fillColor;
+    this.isOverlap = false;
 }
 
 Polygon.prototype = {

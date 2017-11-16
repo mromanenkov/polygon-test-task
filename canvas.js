@@ -18,9 +18,10 @@ Canvas.prototype = {
         this.objects.push(object);
     },
 
-    draw: function(object) {
-        this.ctx.fillStyle = object.color;
-   
+    draw: function(object, isFill) {
+        this.ctx.fillStyle = object.fillColor;
+        this.ctx.strokeStyle = object.strokeColor;
+
         this.ctx.beginPath();
         this.ctx.moveTo(object.points[0], object.points[1]);
         object.points.forEach((point, index) => {
@@ -28,6 +29,8 @@ Canvas.prototype = {
         });
         this.ctx.closePath();
         this.ctx.stroke();
+
+        if(isFill) this.ctx.fill();
     },
 
     erase: function() {
@@ -37,20 +40,51 @@ Canvas.prototype = {
     update: function() {
         this.ctx.clearRect(0, 0, this.setting.width, this.setting.height);
 
-        this.objects.forEach((object)=>{
-            this.draw(object);
-        });
+        this.findOverlappedObjects();
 
-        //console.log(this.objects);
+        this.objects.forEach((object)=>{
+            if(object.isOverlap) {
+                this.draw(object, true);
+            }else{
+                this.draw(object);
+            }
+        });
     },
 
     getSelectedObject: function(cursorPos) {
         let selectedObject;
         this.objects.forEach((object)=>{
-            let isInside = isCursorInPoly(cursorPos, object.points);
+            let isInside = isPointInPoly(cursorPos, object.points);
             if(isInside) selectedObject = object;
         });
         return selectedObject;
+    },
+
+    findOverlappedObjects: function() {
+        let isOverLapping;
+
+        for(let i=0; i<this.objects.length; i++){
+            let objectA = this.objects[i];
+
+            for(let j=i+1; j<this.objects.length; j++){
+                let objectB = this.objects[j];
+                
+                if(checkOverlap(objectA, objectB)){
+                    objectA.isOverlap = true;
+                    objectB.isOverlap = true;
+                    isOverLapping = true;
+                }else{
+                    objectA.isOverlap = false;
+                    objectB.isOverlap = false;
+                }
+            }
+        }
+        if(isOverLapping) {
+            return true;
+        }else{
+            
+            return false;
+        }
     }
     
 }
