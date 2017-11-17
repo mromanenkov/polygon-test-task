@@ -1,3 +1,6 @@
+import Canvas from './canvas';
+import cursor from './cursor';
+import Polygon from './polygon';
 
 let polygonPointsA = [[100,100], [200,100], [200,200], [100,200]];
 let polygonPointsB = [[300,400], [450,300], [500,300], [470,350]];

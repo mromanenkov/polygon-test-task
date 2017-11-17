@@ -34,4 +34,6 @@ Polygon.prototype = {
     }
 }
 
+export default Polygon;
+
 

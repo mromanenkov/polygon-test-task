@@ -1,4 +1,4 @@
-
+import utils from './utils';
 
 function Canvas(id, setting, objects) {
     this.setting = setting;
@@ -48,7 +48,7 @@ Canvas.prototype = {
     update: function() {
         this.ctx.clearRect(0, 0, this.setting.width, this.setting.height);
 
-        this.findOverlappedObjects();
+        this.findAllOverlappedObjects();
 
         this.objects.forEach((object)=>{
             if(object.isOverlap) {
@@ -62,13 +62,35 @@ Canvas.prototype = {
     getSelectedObject: function(cursorPos) {
         let selectedObject;
         this.objects.forEach((object)=>{
-            let isInside = isPointInPoly(cursorPos, object.points);
+            let isInside = utils.isPointInPoly(cursorPos, object.points);
             if(isInside) selectedObject = object;
         });
         return selectedObject;
     },
 
-    findOverlappedObjects: function() {
+    checkOverlap: function(polyA, polyB){
+        
+        polyA = JSON.parse(JSON.stringify(polyA));
+        polyB = JSON.parse(JSON.stringify(polyB));
+    
+        polyA.points.push(polyA.points[0]);
+        polyB.points.push(polyB.points[0]);
+    
+        for(let i = 0; i < polyA.points.length-1; i++){
+            
+            let sideA = [polyA.points[i], polyA.points[i+1]];
+            
+            for(let j = 0; j < polyB.points.length-1; j++){
+                let sideB = [polyB.points[j], polyB.points[j+1]];
+    
+                let isIntersect = utils.getIntersection(sideA, sideB);
+                if(isIntersect) return true
+            }
+        }
+        return false;
+    },
+
+    findAllOverlappedObjects: function() {
         let isOverLapping;
 
         for(let i=0; i<this.objects.length; i++){
@@ -77,7 +99,7 @@ Canvas.prototype = {
             for(let j=i+1; j<this.objects.length; j++){
                 let objectB = this.objects[j];
                 
-                if(checkOverlap(objectA, objectB)){
+                if(this.checkOverlap(objectA, objectB)){
                     objectA.isOverlap = true;
                     objectB.isOverlap = true;
                     isOverLapping = true;
@@ -96,3 +118,5 @@ Canvas.prototype = {
     }
     
 }
+
+export default Canvas;
