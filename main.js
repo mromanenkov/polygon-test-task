@@ -4,12 +4,13 @@ import Polygon from './polygon';
 
 let polygonPointsA = [[100,100], [200,100], [200,200], [100,200]];
 let polygonPointsB = [[300,400], [450,300], [500,300], [470,350]];
+let polygonPointsC = [[0,20], [20,0], [40,10], [40,30], [30,40]];
 
 let strokeColor = '#000';
 let fillColor = '#f00';
 let poly1 = new Polygon(polygonPointsA, strokeColor, fillColor);
 let poly2 = new Polygon(polygonPointsB, strokeColor, fillColor);
-
+let poly3 = new Polygon(polygonPointsC, strokeColor, fillColor);
 
 let setting = {
     width: window.innerWidth - window.innerWidth * 0.02,
@@ -22,13 +23,11 @@ let canvas = new Canvas('example', setting);
 
 window.addEventListener('load', canvas.init());
 
-canvas.add(poly1);
-canvas.add(poly2);
-canvas.update();
+let polygons = [poly1, poly2, poly3];
+canvas.addArr(polygons);
 
 canvas.element.addEventListener('mousedown', (e)=>{
     cursor.cursorDownPos = [e.offsetX, e.offsetY];
-
     canvas.selectedObject = canvas.getSelectedObject(cursor.cursorDownPos);    
 });
 
@@ -40,7 +39,7 @@ canvas.element.addEventListener('mouseup', (e)=>{
         canvas.selectedObject.shift(offset);
         canvas.update();
     }
-    canvas.selectedObject = false;
+    canvas.selectedObject = null;
 });
 
 

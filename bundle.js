@@ -104,11 +104,7 @@
         
         let isInside = this.isPointInPoly([x,y], [[x1,y1],[x3,y3],[x2,y2],[x4,y4]]);
     
-        if(isInside){
-            return true;
-        }else{
-            return false;
-        }
+        return isInside;
     }
 });
 
@@ -127,12 +123,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 let polygonPointsA = [[100,100], [200,100], [200,200], [100,200]];
 let polygonPointsB = [[300,400], [450,300], [500,300], [470,350]];
+let polygonPointsC = [[0,20], [20,0], [40,10], [40,30], [30,40]];
 
 let strokeColor = '#000';
 let fillColor = '#f00';
 let poly1 = new __WEBPACK_IMPORTED_MODULE_2__polygon__["a" /* default */](polygonPointsA, strokeColor, fillColor);
 let poly2 = new __WEBPACK_IMPORTED_MODULE_2__polygon__["a" /* default */](polygonPointsB, strokeColor, fillColor);
-
+let poly3 = new __WEBPACK_IMPORTED_MODULE_2__polygon__["a" /* default */](polygonPointsC, strokeColor, fillColor);
 
 let setting = {
     width: window.innerWidth - window.innerWidth * 0.02,
@@ -145,13 +142,11 @@ let canvas = new __WEBPACK_IMPORTED_MODULE_0__canvas__["a" /* default */]('examp
 
 window.addEventListener('load', canvas.init());
 
-canvas.add(poly1);
-canvas.add(poly2);
-canvas.update();
+let polygons = [poly1, poly2, poly3];
+canvas.addArr(polygons);
 
 canvas.element.addEventListener('mousedown', (e)=>{
     __WEBPACK_IMPORTED_MODULE_1__cursor__["a" /* default */].cursorDownPos = [e.offsetX, e.offsetY];
-
     canvas.selectedObject = canvas.getSelectedObject(__WEBPACK_IMPORTED_MODULE_1__cursor__["a" /* default */].cursorDownPos);    
 });
 
@@ -163,7 +158,7 @@ canvas.element.addEventListener('mouseup', (e)=>{
         canvas.selectedObject.shift(offset);
         canvas.update();
     }
-    canvas.selectedObject = false;
+    canvas.selectedObject = null;
 });
 
 
@@ -179,33 +174,40 @@ canvas.element.addEventListener('mouseup', (e)=>{
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils__ = __webpack_require__(0);
 
 
-function Canvas(id, setting, objects) {
-    this.setting = setting;
-    this.objects = objects || [];
-    this.selectedObject = false;
-    this.element = document.getElementById(id);
-    this.ctx = this.element.getContext('2d');
-    this.nextObjListPos = [this.setting.padding, this.setting.padding];
-}
+class Canvas {
+    constructor(id, setting, objects) {
+        this.setting = setting;
+        this.objects = objects || [];
+        this.selectedObject = false;
+        this.element = document.getElementById(id);
+        this.ctx = this.element.getContext('2d');
+        this.nextObjListPos = [this.setting.padding, this.setting.padding];
+    }
 
-Canvas.prototype = {
-    init: function(objects) {
+    init() {
         this.element.width = this.setting.width;
         this.element.height = this.setting.height;
-    },
+    }
 
-    add: function(object) {
+    add(object) {
         this.objects.push(object);
         object.setFrame();
 
         let offset = [this.nextObjListPos[0] - object.frame[0][0], this.nextObjListPos[1] -  object.frame[0][1]];
-        
+
         object.shift(offset);
         object.setFrame();
         this.nextObjListPos[1] = object.frame[object.frame.length-1][1] + this.setting.polygonMargin;
-    },
+        this.update();
+    }
 
-    draw: function(object, isFill) {
+    addArr(objectArr) {
+        objectArr.forEach((object)=>{
+            this.add(object);
+        });
+    }
+
+    draw(object, isFill) {
         this.ctx.fillStyle = object.fillColor;
         this.ctx.strokeStyle = object.strokeColor;
 
@@ -218,13 +220,13 @@ Canvas.prototype = {
         this.ctx.stroke();
 
         if(isFill) this.ctx.fill();
-    },
+    }
 
-    erase: function() {
+    erase() {
         this.ctx.clearRect(0, 0, this.setting.width, this.setting.height);
-    },
+    }
 
-    update: function() {
+    update() {
         this.ctx.clearRect(0, 0, this.setting.width, this.setting.height);
 
         this.findAllOverlappedObjects();
@@ -236,40 +238,40 @@ Canvas.prototype = {
                 this.draw(object);
             }
         });
-    },
+    }
 
-    getSelectedObject: function(cursorPos) {
+    getSelectedObject(cursorPos) {
         let selectedObject;
         this.objects.forEach((object)=>{
             let isInside = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(cursorPos, object.points);
             if(isInside) selectedObject = object;
         });
         return selectedObject;
-    },
+    }
 
-    checkOverlap: function(polyA, polyB){
-        
+    checkOverlap(polyA, polyB){
+
         polyA = JSON.parse(JSON.stringify(polyA));
         polyB = JSON.parse(JSON.stringify(polyB));
-    
+
         polyA.points.push(polyA.points[0]);
         polyB.points.push(polyB.points[0]);
-    
+
         for(let i = 0; i < polyA.points.length-1; i++){
-            
+
             let sideA = [polyA.points[i], polyA.points[i+1]];
-            
+
             for(let j = 0; j < polyB.points.length-1; j++){
                 let sideB = [polyB.points[j], polyB.points[j+1]];
-    
+
                 let isIntersect = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].getIntersection(sideA, sideB);
                 if(isIntersect) return true
             }
         }
         return false;
-    },
+    }
 
-    findAllOverlappedObjects: function() {
+    findAllOverlappedObjects() {
         let isOverLapping;
 
         for(let i=0; i<this.objects.length; i++){
@@ -277,7 +279,7 @@ Canvas.prototype = {
 
             for(let j=i+1; j<this.objects.length; j++){
                 let objectB = this.objects[j];
-                
+
                 if(this.checkOverlap(objectA, objectB)){
                     objectA.isOverlap = true;
                     objectB.isOverlap = true;
@@ -288,14 +290,9 @@ Canvas.prototype = {
                 }
             }
         }
-        if(isOverLapping) {
-            return true;
-        }else{
-            
-            return false;
-        }
+        return isOverLapping;
     }
-    
+
 }
 
 /* harmony default export */ __webpack_exports__["a"] = (Canvas);
@@ -305,44 +302,45 @@ Canvas.prototype = {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_js__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils__ = __webpack_require__(0);
 
 
 const cursor = {
-    cursorDownPos: [0,0],
-    cursorUpPos: [0,0],
-    
-    getOffset: function() {
-        return [this.cursorUpPos[0] - this.cursorDownPos[0], this.cursorUpPos[1] - this.cursorDownPos[1]];
-    },
-  
-    isCursorInPoly: __WEBPACK_IMPORTED_MODULE_0__utils_js__["a" /* default */].isPointInPoly
+  cursorDownPos: [0, 0],
+  cursorUpPos: [0, 0],
 
-}
+  getOffset() {
+    return [this.cursorUpPos[0] - this.cursorDownPos[0],
+      this.cursorUpPos[1] - this.cursorDownPos[1]];
+
+  },
+  isCursorInPoly: __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly,
+
+};
 
 /* harmony default export */ __webpack_exports__["a"] = (cursor);
+
 
 /***/ }),
 /* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-function Polygon(points, strokeColor, fillColor) {
-    this.points = points;
-    this.strokeColor = strokeColor;
-    this.fillColor = fillColor;
-    this.isOverlap = false;
-    this.frame;
-}
+class Polygon {
+    constructor(points, strokeColor, fillColor) {
+        this.points = points;
+        this.strokeColor = strokeColor;
+        this.fillColor = fillColor;
+        this.isOverlap = false;
+    }
 
-Polygon.prototype = {
-    shift: function(offset) {
+    shift(offset) {
         this.points.forEach((point)=>{
             point[0] += offset[0];
             point[1] += offset[1];
         });
-    },
-    setFrame: function() {
+    }
+    setFrame() {
         let minX = this.points.reduce((min, item)=>{
             return item[0] < min ? item[0]: min;
         }, this.points[0][0]);
@@ -352,18 +350,20 @@ Polygon.prototype = {
         }, this.points[0][0]);
         
         let minY = this.points.reduce((min, item)=>{
-            return item[0] < min ? item[0]: min;
+            return item[1] < min ? item[1]: min;
         }, this.points[0][1]);
         
         let maxY = this.points.reduce((min, item)=>{
-            return item[0] > min ? item[0]: min;
+            return item[1] > min ? item[1]: min;
         }, this.points[0][1]);
 
         this.frame = [[minX, minY],[maxX, minY],[maxX, maxY], [minX, maxY]];
+        console.log(this.frame);
     }
 }
 
 /* harmony default export */ __webpack_exports__["a"] = (Polygon);
+
 
 
 

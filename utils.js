@@ -34,10 +34,6 @@ export default {
         
         let isInside = this.isPointInPoly([x,y], [[x1,y1],[x3,y3],[x2,y2],[x4,y4]]);
     
-        if(isInside){
-            return true;
-        }else{
-            return false;
-        }
+        return isInside;
     }
 }
