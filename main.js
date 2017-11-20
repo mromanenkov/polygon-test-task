@@ -3,7 +3,7 @@ import cursor from './cursor';
 import Polygon from './polygon';
 
 const polygonPointsA = [[100, 100], [200, 100], [200, 200], [100, 200]];
-const polygonPointsB = [[300, 400], [450, 300], [500, 300], [470, 350]];
+const polygonPointsB = [[300, 400], [450, 300], [470, 370]];
 const polygonPointsC = [[0, 20], [20, 0], [40, 10], [40, 30], [30, 40]];
 
 const strokeColor = '#000';
@@ -41,4 +41,3 @@ canvas.element.addEventListener('mouseup', (e) => {
   }
   canvas.selectedObject = null;
 });
-

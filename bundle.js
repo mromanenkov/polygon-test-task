@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -68,16 +68,102 @@
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+
+/* harmony default export */ __webpack_exports__["a"] = ({
+  isPointInPoly(point, poly) {
+    let x = point[0],
+      y = point[1];
+
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      let xi = poly[i][0],
+        yi = poly[i][1];
+      let xj = poly[j][0],
+        yj = poly[j][1];
+
+      const intersect = ((yi > y) != (yj > y))
+                    && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+
+    return inside;
+  },
+
+  getIntersection(segmentA, segmentB) {
+    let x1 = segmentA[0][0],
+      y1 = segmentA[0][1],
+      x2 = segmentA[1][0],
+      y2 = segmentA[1][1],
+
+      x3 = segmentB[0][0],
+      y3 = segmentB[0][1],
+      x4 = segmentB[1][0],
+      y4 = segmentB[1][1];
+
+    const x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
+                ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+    const y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
+                ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+
+    const isInside = this.isPointInPoly([x, y], [[x1, y1], [x3, y3], [x2, y2], [x4, y4]]);
+
+    return isInside;
+  },
+});
+
+
+/***/ }),
+/* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+class Polygon {
+  constructor(points, strokeColor, fillColor) {
+    this.points = points;
+    this.strokeColor = strokeColor;
+    this.fillColor = fillColor;
+    this.isOverlap = false;
+  }
+
+  shift(offset) {
+    this.points.forEach((point) => {
+      point[0] += offset[0];
+      point[1] += offset[1];
+    });
+  }
+  
+  setFrame() {
+    const minX = this.points.reduce((min, item) => (item[0] < min ? item[0] : min), this.points[0][0]);
+
+    const maxX = this.points.reduce((min, item) => (item[0] > min ? item[0] : min), this.points[0][0]);
+
+    const minY = this.points.reduce((min, item) => (item[1] < min ? item[1] : min), this.points[0][1]);
+
+    const maxY = this.points.reduce((min, item) => (item[1] > min ? item[1] : min), this.points[0][1]);
+
+    this.frame = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
+  }
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (Polygon);
+
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__canvas__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cursor__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__polygon__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__canvas__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cursor__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__polygon__ = __webpack_require__(1);
 
 
 
 
 const polygonPointsA = [[100, 100], [200, 100], [200, 200], [100, 200]];
-const polygonPointsB = [[300, 400], [450, 300], [500, 300], [470, 350]];
+const polygonPointsB = [[300, 400], [450, 300], [470, 370]];
 const polygonPointsC = [[0, 20], [20, 0], [40, 10], [40, 30], [30, 40]];
 
 const strokeColor = '#000';
@@ -117,13 +203,14 @@ canvas.element.addEventListener('mouseup', (e) => {
 });
 
 
-
 /***/ }),
-/* 1 */
+/* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__polygon__ = __webpack_require__(1);
+
 
 
 class Canvas {
@@ -181,15 +268,11 @@ class Canvas {
   update() {
     this.ctx.clearRect(0, 0, this.setting.width, this.setting.height);
 
-    this.findAllOverlappedObjects();
- 
+    this.findAllIntersectObjects();
+    this.checkVertexInPolyAll();
+
     this.objects.forEach((object) => {
-      //console.log(object);
-      if (object.isOverlap) {
-        this.draw(object, true);
-      } else {
-        this.draw(object);
-      }
+      object.isOverlap ? this.draw(object, true) : this.draw(object);
     });
   }
 
@@ -202,27 +285,77 @@ class Canvas {
     return selectedObject;
   }
 
-  checkOverlap(polyA, polyB) {
-    polyA = JSON.parse(JSON.stringify(polyA));
-    polyB = JSON.parse(JSON.stringify(polyB));
 
-    polyA.points.push(polyA.points[0]);
-    polyB.points.push(polyB.points[0]);
+  checkVertexInPoly(polyA, polyB) {
+    let isInPoly = false;
 
-    for (let i = 0; i < polyA.points.length - 1; i++) {
-      const sideA = [polyA.points[i], polyA.points[i + 1]];
+    polyA.points.forEach((point) => {
+      isInPoly = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(point, polyB.points);
+      if (isInPoly) {
+        isInPoly = true;
+        return false;
+      }
+    });
+    polyB.points.forEach((point) => {
+      isInPoly = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].isPointInPoly(point, polyA.points);
+      if (isInPoly) {
+        isInPoly = true;
+        return false;
+      }
+    });
 
-      for (let j = 0; j < polyB.points.length - 1; j++) {
-        const sideB = [polyB.points[j], polyB.points[j + 1]];
+    return isInPoly;
+  }
+
+  checkVertexInPolyAll() {
+    for (let i = 0; i < this.objects.length; i++) {
+      const objectA = this.objects[i];
+
+      for (let j = 0; j < this.objects.length; j++) {
+        if (i == j) continue;
+        const objectB = this.objects[j];
+        const isInPoly = this.checkVertexInPoly(objectA, objectB);
+
+        if (isInPoly) {
+          objectA.isOverlap = true;
+          objectB.isOverlap = true;
+        }
+      }
+    }
+  }
+
+  checkSideIntersection(polyA, polyB) {
+    const pointsAcopy = JSON.parse(JSON.stringify(polyA.points));
+    const pointsBcopy = JSON.parse(JSON.stringify(polyB.points));
+
+    const polyAcopy = new __WEBPACK_IMPORTED_MODULE_1__polygon__["a" /* default */](pointsAcopy);
+    const polyBcopy = new __WEBPACK_IMPORTED_MODULE_1__polygon__["a" /* default */](pointsBcopy);
+
+    polyAcopy.points.push(polyAcopy.points[0]);
+    polyBcopy.points.push(polyBcopy.points[0]);
+
+    const isIntersect = false;
+    for (let i = 0; i < polyAcopy.points.length - 1; i++) {
+      const sideA = [polyAcopy.points[i], polyAcopy.points[i + 1]];
+
+      for (let j = 0; j < polyBcopy.points.length - 1; j++) {
+        const sideB = [polyBcopy.points[j], polyBcopy.points[j + 1]];
 
         const isIntersect = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].getIntersection(sideA, sideB);
         if (isIntersect) return true;
       }
     }
-    return false;
+    return isIntersect;
   }
 
-  findAllOverlappedObjects() {
+  findOverlappedObject(polyA, polyB) {
+    let isOverlap = false;
+    if (this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB)) isOverlap = true;
+    return isOverlap;
+  }
+
+
+  findAllIntersectObjects() {
     const overlapObjectIndeces = [];
     for (let i = 0; i < this.objects.length; i++) {
       const objectA = this.objects[i];
@@ -230,15 +363,14 @@ class Canvas {
       for (let j = i + 1; j < this.objects.length; j++) {
         const objectB = this.objects[j];
 
-        if (this.checkOverlap(objectA, objectB)) {
+        if (this.checkSideIntersection(objectA, objectB)) {
           overlapObjectIndeces.push(i);
           overlapObjectIndeces.push(j);
         }
       }
     }
-
-    for(let i = 0; i < this.objects.length; i++) {
-      this.objects[i].isOverlap = overlapObjectIndeces.indexOf(i) >= 0 ? true : false; 
+    for (let i = 0; i < this.objects.length; i++) {
+      this.objects[i].isOverlap = overlapObjectIndeces.indexOf(i) >= 0;
     }
   }
 }
@@ -247,11 +379,11 @@ class Canvas {
 
 
 /***/ }),
-/* 2 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils__ = __webpack_require__(0);
 
 
 const cursor = {
@@ -268,92 +400,6 @@ const cursor = {
 };
 
 /* harmony default export */ __webpack_exports__["a"] = (cursor);
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-/* harmony default export */ __webpack_exports__["a"] = ({
-  isPointInPoly(point, poly) {
-    let x = point[0],
-      y = point[1];
-
-    let inside = false;
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      let xi = poly[i][0],
-        yi = poly[i][1];
-      let xj = poly[j][0],
-        yj = poly[j][1];
-
-      const intersect = ((yi > y) != (yj > y))
-                    && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-      if (intersect) inside = !inside;
-    }
-
-    return inside;
-  },
-
-  getIntersection(segmentA, segmentB) {
-    let x1 = segmentA[0][0],
-      y1 = segmentA[0][1],
-      x2 = segmentA[1][0],
-      y2 = segmentA[1][1],
-
-      x3 = segmentB[0][0],
-      y3 = segmentB[0][1],
-      x4 = segmentB[1][0],
-      y4 = segmentB[1][1];
-
-    const x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
-                ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-    const y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
-                ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-
-    const isInside = this.isPointInPoly([x, y], [[x1, y1], [x3, y3], [x2, y2], [x4, y4]]);
-
-    return isInside;
-  },
-});
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-class Polygon {
-  constructor(points, strokeColor, fillColor) {
-    this.points = points;
-    this.strokeColor = strokeColor;
-    this.fillColor = fillColor;
-    this.isOverlap = false;
-  }
-
-  shift(offset) {
-    this.points.forEach((point) => {
-      point[0] += offset[0];
-      point[1] += offset[1];
-    });
-  }
-  
-  setFrame() {
-    const minX = this.points.reduce((min, item) => (item[0] < min ? item[0] : min), this.points[0][0]);
-
-    const maxX = this.points.reduce((min, item) => (item[0] > min ? item[0] : min), this.points[0][0]);
-
-    const minY = this.points.reduce((min, item) => (item[1] < min ? item[1] : min), this.points[0][1]);
-
-    const maxY = this.points.reduce((min, item) => (item[1] > min ? item[1] : min), this.points[0][1]);
-
-    this.frame = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
-  }
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (Polygon);
-
 
 
 /***/ })

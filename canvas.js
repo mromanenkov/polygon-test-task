@@ -1,4 +1,5 @@
 import utils from './utils';
+import Polygon from './polygon';
 
 class Canvas {
   constructor(id, setting, objects) {
@@ -55,15 +56,11 @@ class Canvas {
   update() {
     this.ctx.clearRect(0, 0, this.setting.width, this.setting.height);
 
-    this.findAllOverlappedObjects();
- 
+    this.findAllIntersectObjects();
+    this.checkVertexInPolyAll();
+
     this.objects.forEach((object) => {
-      //console.log(object);
-      if (object.isOverlap) {
-        this.draw(object, true);
-      } else {
-        this.draw(object);
-      }
+      object.isOverlap ? this.draw(object, true) : this.draw(object);
     });
   }
 
@@ -76,27 +73,77 @@ class Canvas {
     return selectedObject;
   }
 
-  checkOverlap(polyA, polyB) {
-    polyA = JSON.parse(JSON.stringify(polyA));
-    polyB = JSON.parse(JSON.stringify(polyB));
 
-    polyA.points.push(polyA.points[0]);
-    polyB.points.push(polyB.points[0]);
+  checkVertexInPoly(polyA, polyB) {
+    let isInPoly = false;
 
-    for (let i = 0; i < polyA.points.length - 1; i++) {
-      const sideA = [polyA.points[i], polyA.points[i + 1]];
+    polyA.points.forEach((point) => {
+      isInPoly = utils.isPointInPoly(point, polyB.points);
+      if (isInPoly) {
+        isInPoly = true;
+        return false;
+      }
+    });
+    polyB.points.forEach((point) => {
+      isInPoly = utils.isPointInPoly(point, polyA.points);
+      if (isInPoly) {
+        isInPoly = true;
+        return false;
+      }
+    });
 
-      for (let j = 0; j < polyB.points.length - 1; j++) {
-        const sideB = [polyB.points[j], polyB.points[j + 1]];
+    return isInPoly;
+  }
+
+  checkVertexInPolyAll() {
+    for (let i = 0; i < this.objects.length; i++) {
+      const objectA = this.objects[i];
+
+      for (let j = 0; j < this.objects.length; j++) {
+        if (i == j) continue;
+        const objectB = this.objects[j];
+        const isInPoly = this.checkVertexInPoly(objectA, objectB);
+
+        if (isInPoly) {
+          objectA.isOverlap = true;
+          objectB.isOverlap = true;
+        }
+      }
+    }
+  }
+
+  checkSideIntersection(polyA, polyB) {
+    const pointsAcopy = JSON.parse(JSON.stringify(polyA.points));
+    const pointsBcopy = JSON.parse(JSON.stringify(polyB.points));
+
+    const polyAcopy = new Polygon(pointsAcopy);
+    const polyBcopy = new Polygon(pointsBcopy);
+
+    polyAcopy.points.push(polyAcopy.points[0]);
+    polyBcopy.points.push(polyBcopy.points[0]);
+
+    const isIntersect = false;
+    for (let i = 0; i < polyAcopy.points.length - 1; i++) {
+      const sideA = [polyAcopy.points[i], polyAcopy.points[i + 1]];
+
+      for (let j = 0; j < polyBcopy.points.length - 1; j++) {
+        const sideB = [polyBcopy.points[j], polyBcopy.points[j + 1]];
 
         const isIntersect = utils.getIntersection(sideA, sideB);
         if (isIntersect) return true;
       }
     }
-    return false;
+    return isIntersect;
   }
 
-  findAllOverlappedObjects() {
+  findOverlappedObject(polyA, polyB) {
+    let isOverlap = false;
+    if (this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB)) isOverlap = true;
+    return isOverlap;
+  }
+
+
+  findAllIntersectObjects() {
     const overlapObjectIndeces = [];
     for (let i = 0; i < this.objects.length; i++) {
       const objectA = this.objects[i];
@@ -104,15 +151,14 @@ class Canvas {
       for (let j = i + 1; j < this.objects.length; j++) {
         const objectB = this.objects[j];
 
-        if (this.checkOverlap(objectA, objectB)) {
+        if (this.checkSideIntersection(objectA, objectB)) {
           overlapObjectIndeces.push(i);
           overlapObjectIndeces.push(j);
         }
       }
     }
-
-    for(let i = 0; i < this.objects.length; i++) {
-      this.objects[i].isOverlap = overlapObjectIndeces.indexOf(i) >= 0 ? true : false; 
+    for (let i = 0; i < this.objects.length; i++) {
+      this.objects[i].isOverlap = overlapObjectIndeces.indexOf(i) >= 0;
     }
   }
 }
