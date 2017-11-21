@@ -68,11 +68,13 @@
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__vector__ = __webpack_require__(4);
+
 
 /* harmony default export */ __webpack_exports__["a"] = ({
   isPointInPoly(point, poly) {
     let x = point[0],
-      y = point[1];
+        y = point[1];
 
     let inside = false;
     for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -90,22 +92,23 @@
   },
 
   getIntersection(segmentA, segmentB) {
-    let x1 = segmentA[0][0],
-      y1 = segmentA[0][1],
-      x2 = segmentA[1][0],
-      y2 = segmentA[1][1],
+    
+    let vectorA = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentA[0], segmentA[1]);
+    let vectorB = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentB[0], segmentB[1]);
 
-      x3 = segmentB[0][0],
-      y3 = segmentB[0][1],
-      x4 = segmentB[1][0],
-      y4 = segmentB[1][1];
+    const x = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) * 
+              (vectorB.x1 - vectorB.x2) - (vectorA.x1 - vectorA.x2) * 
+              (vectorB.x1 * vectorB.y2 - vectorB.y1 * vectorB.x2)) /
+              ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) - 
+              (vectorA.y1 - vectorA.y2) * (vectorB.x1 - vectorB.x2));
+    const y = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) * 
+              (vectorB.y1 - vectorB.y2) - (vectorA.y1 - vectorA.y2) * 
+              (vectorB.x1 * vectorB.y2 - vectorB.y1 * vectorB.x2)) /
+              ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) - 
+              (vectorA.y1 - vectorA.y2) * (vectorB.x1 - vectorB.x2));
 
-    const x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
-                ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-    const y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
-                ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-
-    const isInside = this.isPointInPoly([x, y], [[x1, y1], [x3, y3], [x2, y2], [x4, y4]]);
+    const isInside = this.isPointInPoly([x, y], [[vectorA.x1, vectorA.y1], 
+          [vectorB.x1, vectorB.y1], [vectorA.x2, vectorA.y2], [vectorB.x2, vectorB.y2]]);
 
     return isInside;
   },
@@ -132,7 +135,7 @@ class Polygon {
     });
   }
   
-  setFrame() {
+  setBoundingBox() {
     const minX = this.points.reduce((min, item) => (item[0] < min ? item[0] : min), this.points[0][0]);
 
     const maxX = this.points.reduce((min, item) => (item[0] > min ? item[0] : min), this.points[0][0]);
@@ -141,7 +144,7 @@ class Polygon {
 
     const maxY = this.points.reduce((min, item) => (item[1] > min ? item[1] : min), this.points[0][1]);
 
-    this.frame = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
+    this.boundingBox = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
   }
 }
 
@@ -156,7 +159,7 @@ class Polygon {
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__canvas__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cursor__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cursor__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__polygon__ = __webpack_require__(1);
 
 
@@ -230,13 +233,13 @@ class Canvas {
 
   add(object) {
     this.objects.push(object);
-    object.setFrame();
+    object.setBoundingBox();
 
-    const offset = [this.nextObjListPos[0] - object.frame[0][0], this.nextObjListPos[1] - object.frame[0][1]];
+    const offset = [this.nextObjListPos[0] - object.boundingBox[0][0], this.nextObjListPos[1] - object.boundingBox[0][1]];
 
     object.shift(offset);
-    object.setFrame();
-    this.nextObjListPos[1] = object.frame[object.frame.length - 1][1] + this.setting.polygonMargin;
+    object.setBoundingBox();
+    this.nextObjListPos[1] = object.boundingBox[object.boundingBox.length - 1][1] + this.setting.polygonMargin;
     this.update();
   }
 
@@ -247,9 +250,11 @@ class Canvas {
   }
 
   draw(object, isFill) {
+    
     this.ctx.fillStyle = object.fillColor;
     this.ctx.strokeStyle = object.strokeColor;
 
+    this.ctx.save();
     this.ctx.beginPath();
     this.ctx.moveTo(object.points[0], object.points[1]);
     object.points.forEach((point, index) => {
@@ -257,6 +262,7 @@ class Canvas {
     });
     this.ctx.closePath();
     this.ctx.stroke();
+    this.ctx.restore();
 
     if (isFill) this.ctx.fill();
   }
@@ -380,6 +386,24 @@ class Canvas {
 
 /***/ }),
 /* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+class Vector {
+  constructor(pointA, pointB) {
+    this.x1 = pointA[0];
+    this.y1 = pointA[1];
+
+    this.x2 = pointB[0];
+    this.y2 = pointB[1];
+  }
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (Vector);
+
+
+/***/ }),
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

@@ -1,8 +1,9 @@
+import Vector from './vector';
 
 export default {
   isPointInPoly(point, poly) {
     let x = point[0],
-      y = point[1];
+        y = point[1];
 
     let inside = false;
     for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -20,22 +21,23 @@ export default {
   },
 
   getIntersection(segmentA, segmentB) {
-    let x1 = segmentA[0][0],
-      y1 = segmentA[0][1],
-      x2 = segmentA[1][0],
-      y2 = segmentA[1][1],
+    
+    let vectorA = new Vector(segmentA[0], segmentA[1]);
+    let vectorB = new Vector(segmentB[0], segmentB[1]);
 
-      x3 = segmentB[0][0],
-      y3 = segmentB[0][1],
-      x4 = segmentB[1][0],
-      y4 = segmentB[1][1];
+    const x = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) * 
+              (vectorB.x1 - vectorB.x2) - (vectorA.x1 - vectorA.x2) * 
+              (vectorB.x1 * vectorB.y2 - vectorB.y1 * vectorB.x2)) /
+              ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) - 
+              (vectorA.y1 - vectorA.y2) * (vectorB.x1 - vectorB.x2));
+    const y = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) * 
+              (vectorB.y1 - vectorB.y2) - (vectorA.y1 - vectorA.y2) * 
+              (vectorB.x1 * vectorB.y2 - vectorB.y1 * vectorB.x2)) /
+              ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) - 
+              (vectorA.y1 - vectorA.y2) * (vectorB.x1 - vectorB.x2));
 
-    const x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
-                ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-    const y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
-                ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-
-    const isInside = this.isPointInPoly([x, y], [[x1, y1], [x3, y3], [x2, y2], [x4, y4]]);
+    const isInside = this.isPointInPoly([x, y], [[vectorA.x1, vectorA.y1], 
+          [vectorB.x1, vectorB.y1], [vectorA.x2, vectorA.y2], [vectorB.x2, vectorB.y2]]);
 
     return isInside;
   },

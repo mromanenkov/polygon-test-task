@@ -18,13 +18,13 @@ class Canvas {
 
   add(object) {
     this.objects.push(object);
-    object.setFrame();
+    object.setBoundingBox();
 
-    const offset = [this.nextObjListPos[0] - object.frame[0][0], this.nextObjListPos[1] - object.frame[0][1]];
+    const offset = [this.nextObjListPos[0] - object.boundingBox[0][0], this.nextObjListPos[1] - object.boundingBox[0][1]];
 
     object.shift(offset);
-    object.setFrame();
-    this.nextObjListPos[1] = object.frame[object.frame.length - 1][1] + this.setting.polygonMargin;
+    object.setBoundingBox();
+    this.nextObjListPos[1] = object.boundingBox[object.boundingBox.length - 1][1] + this.setting.polygonMargin;
     this.update();
   }
 
@@ -35,9 +35,11 @@ class Canvas {
   }
 
   draw(object, isFill) {
+    
     this.ctx.fillStyle = object.fillColor;
     this.ctx.strokeStyle = object.strokeColor;
 
+    this.ctx.save();
     this.ctx.beginPath();
     this.ctx.moveTo(object.points[0], object.points[1]);
     object.points.forEach((point, index) => {
@@ -45,6 +47,7 @@ class Canvas {
     });
     this.ctx.closePath();
     this.ctx.stroke();
+    this.ctx.restore();
 
     if (isFill) this.ctx.fill();
   }

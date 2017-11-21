@@ -13,7 +13,7 @@ class Polygon {
     });
   }
   
-  setFrame() {
+  setBoundingBox() {
     const minX = this.points.reduce((min, item) => (item[0] < min ? item[0] : min), this.points[0][0]);
 
     const maxX = this.points.reduce((min, item) => (item[0] > min ? item[0] : min), this.points[0][0]);
@@ -22,7 +22,7 @@ class Polygon {
 
     const maxY = this.points.reduce((min, item) => (item[1] > min ? item[1] : min), this.points[0][1]);
 
-    this.frame = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
+    this.boundingBox = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
   }
 }
 
