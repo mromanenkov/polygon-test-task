@@ -20,11 +20,13 @@ class Canvas {
     this.objects.push(object);
     object.setBoundingBox();
 
-    const offset = [this.nextObjListPos[0] - object.boundingBox[0][0], this.nextObjListPos[1] - object.boundingBox[0][1]];
+    const offset = [this.nextObjListPos[0] - object.boundingBox[0][0],
+      this.nextObjListPos[1] - object.boundingBox[0][1]];
 
     object.shift(offset);
     object.setBoundingBox();
-    this.nextObjListPos[1] = object.boundingBox[object.boundingBox.length - 1][1] + this.setting.polygonMargin;
+    this.nextObjListPos[1] = object.boundingBox[object.boundingBox.length - 1][1] +
+      this.setting.polygonMargin;
     this.update();
   }
 
@@ -35,14 +37,13 @@ class Canvas {
   }
 
   draw(object, isFill) {
-    
     this.ctx.fillStyle = object.fillColor;
     this.ctx.strokeStyle = object.strokeColor;
 
     this.ctx.save();
     this.ctx.beginPath();
     this.ctx.moveTo(object.points[0], object.points[1]);
-    object.points.forEach((point, index) => {
+    object.points.forEach((point) => {
       this.ctx.lineTo(point[0], point[1]);
     });
     this.ctx.closePath();
@@ -125,14 +126,14 @@ class Canvas {
     polyAcopy.points.push(polyAcopy.points[0]);
     polyBcopy.points.push(polyBcopy.points[0]);
 
-    const isIntersect = false;
+    let isIntersect = false;
     for (let i = 0; i < polyAcopy.points.length - 1; i++) {
       const sideA = [polyAcopy.points[i], polyAcopy.points[i + 1]];
 
       for (let j = 0; j < polyBcopy.points.length - 1; j++) {
         const sideB = [polyBcopy.points[j], polyBcopy.points[j + 1]];
 
-        const isIntersect = utils.getIntersection(sideA, sideB);
+        isIntersect = utils.getIntersection(sideA, sideB);
         if (isIntersect) return true;
       }
     }
@@ -141,7 +142,9 @@ class Canvas {
 
   findOverlappedObject(polyA, polyB) {
     let isOverlap = false;
-    if (this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB)) isOverlap = true;
+    if (this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB)) {
+      isOverlap = true;
+    }
     return isOverlap;
   }
 

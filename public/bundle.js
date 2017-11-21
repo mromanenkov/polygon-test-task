@@ -73,42 +73,40 @@
 
 /* harmony default export */ __webpack_exports__["a"] = ({
   isPointInPoly(point, poly) {
-    let x = point[0],
-        y = point[1];
+    const x = point[0];
+    const y = point[1];
 
     let inside = false;
     for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      let xi = poly[i][0],
-        yi = poly[i][1];
-      let xj = poly[j][0],
-        yj = poly[j][1];
+      const xi = poly[i][0];
+      const yi = poly[i][1];
+      const xj = poly[j][0];
+      const yj = poly[j][1];
 
-      const intersect = ((yi > y) != (yj > y))
+      const intersect = ((yi > y) !== (yj > y))
                     && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
       if (intersect) inside = !inside;
     }
-
     return inside;
   },
 
   getIntersection(segmentA, segmentB) {
-    
-    let vectorA = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentA[0], segmentA[1]);
-    let vectorB = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentB[0], segmentB[1]);
+    const vectorA = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentA[0], segmentA[1]);
+    const vectorB = new __WEBPACK_IMPORTED_MODULE_0__vector__["a" /* default */](segmentB[0], segmentB[1]);
 
-    const x = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) * 
-              (vectorB.x1 - vectorB.x2) - (vectorA.x1 - vectorA.x2) * 
+    const x = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) *
+              (vectorB.x1 - vectorB.x2) - (vectorA.x1 - vectorA.x2) *
               (vectorB.x1 * vectorB.y2 - vectorB.y1 * vectorB.x2)) /
-              ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) - 
+              ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) -
               (vectorA.y1 - vectorA.y2) * (vectorB.x1 - vectorB.x2));
-    const y = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) * 
-              (vectorB.y1 - vectorB.y2) - (vectorA.y1 - vectorA.y2) * 
+    const y = ((vectorA.x1 * vectorA.y2 - vectorA.y1 * vectorA.x2) *
+              (vectorB.y1 - vectorB.y2) - (vectorA.y1 - vectorA.y2) *
               (vectorB.x1 * vectorB.y2 - vectorB.y1 * vectorB.x2)) /
-              ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) - 
+              ((vectorA.x1 - vectorA.x2) * (vectorB.y1 - vectorB.y2) -
               (vectorA.y1 - vectorA.y2) * (vectorB.x1 - vectorB.x2));
 
-    const isInside = this.isPointInPoly([x, y], [[vectorA.x1, vectorA.y1], 
-          [vectorB.x1, vectorB.y1], [vectorA.x2, vectorA.y2], [vectorB.x2, vectorB.y2]]);
+    const isInside = this.isPointInPoly([x, y], [[vectorA.x1, vectorA.y1],
+      [vectorB.x1, vectorB.y1], [vectorA.x2, vectorA.y2], [vectorB.x2, vectorB.y2]]);
 
     return isInside;
   },
@@ -134,16 +132,16 @@ class Polygon {
       point[1] += offset[1];
     });
   }
-  
+
   setBoundingBox() {
-    const minX = this.points.reduce((min, item) => (item[0] < min ? item[0] : min), this.points[0][0]);
-
-    const maxX = this.points.reduce((min, item) => (item[0] > min ? item[0] : min), this.points[0][0]);
-
-    const minY = this.points.reduce((min, item) => (item[1] < min ? item[1] : min), this.points[0][1]);
-
-    const maxY = this.points.reduce((min, item) => (item[1] > min ? item[1] : min), this.points[0][1]);
-
+    const minX = this.points.reduce((min, item) =>
+      (item[0] < min ? item[0] : min), this.points[0][0]);
+    const maxX = this.points.reduce((min, item) =>
+      (item[0] > min ? item[0] : min), this.points[0][0]);
+    const minY = this.points.reduce((min, item) =>
+      (item[1] < min ? item[1] : min), this.points[0][1]);
+    const maxY = this.points.reduce((min, item) =>
+      (item[1] > min ? item[1] : min), this.points[0][1]);
     this.boundingBox = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
   }
 }
@@ -235,11 +233,13 @@ class Canvas {
     this.objects.push(object);
     object.setBoundingBox();
 
-    const offset = [this.nextObjListPos[0] - object.boundingBox[0][0], this.nextObjListPos[1] - object.boundingBox[0][1]];
+    const offset = [this.nextObjListPos[0] - object.boundingBox[0][0],
+      this.nextObjListPos[1] - object.boundingBox[0][1]];
 
     object.shift(offset);
     object.setBoundingBox();
-    this.nextObjListPos[1] = object.boundingBox[object.boundingBox.length - 1][1] + this.setting.polygonMargin;
+    this.nextObjListPos[1] = object.boundingBox[object.boundingBox.length - 1][1] +
+      this.setting.polygonMargin;
     this.update();
   }
 
@@ -250,14 +250,13 @@ class Canvas {
   }
 
   draw(object, isFill) {
-    
     this.ctx.fillStyle = object.fillColor;
     this.ctx.strokeStyle = object.strokeColor;
 
     this.ctx.save();
     this.ctx.beginPath();
     this.ctx.moveTo(object.points[0], object.points[1]);
-    object.points.forEach((point, index) => {
+    object.points.forEach((point) => {
       this.ctx.lineTo(point[0], point[1]);
     });
     this.ctx.closePath();
@@ -340,14 +339,14 @@ class Canvas {
     polyAcopy.points.push(polyAcopy.points[0]);
     polyBcopy.points.push(polyBcopy.points[0]);
 
-    const isIntersect = false;
+    let isIntersect = false;
     for (let i = 0; i < polyAcopy.points.length - 1; i++) {
       const sideA = [polyAcopy.points[i], polyAcopy.points[i + 1]];
 
       for (let j = 0; j < polyBcopy.points.length - 1; j++) {
         const sideB = [polyBcopy.points[j], polyBcopy.points[j + 1]];
 
-        const isIntersect = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].getIntersection(sideA, sideB);
+        isIntersect = __WEBPACK_IMPORTED_MODULE_0__utils__["a" /* default */].getIntersection(sideA, sideB);
         if (isIntersect) return true;
       }
     }
@@ -356,7 +355,9 @@ class Canvas {
 
   findOverlappedObject(polyA, polyB) {
     let isOverlap = false;
-    if (this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB)) isOverlap = true;
+    if (this.checkSideIntersection(polyA, polyB) || this.checkVertexInPoly(polyA, polyB)) {
+      isOverlap = true;
+    }
     return isOverlap;
   }
 

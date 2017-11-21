@@ -1,9 +1,9 @@
 'use strict';
 
 module.exports = {
-    entry: './main.js',
+    entry: './src/main.js',
     output: {
-      filename: 'bundle.js'
+      filename: './public/bundle.js'
     },
 
     watch: true,
